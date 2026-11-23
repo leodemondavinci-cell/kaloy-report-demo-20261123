@@ -262,6 +262,19 @@ dialog h2 { font-size: clamp(1.75rem, 4vw, 2.55rem); margin: 11px 0 8px; }
 .paid-note { margin: 0 0 14px; color: #335339; font-size: .92rem; font-weight: 640; }
 .paid-note span { margin-right: .24em; }
 #contactForm { display: grid; gap: 12px; margin-top: 23px; }
+
+.objective-section { margin: 22px 0 16px; }
+.objective-heading { display: flex; align-items: baseline; flex-wrap: wrap; justify-content: space-between; gap: 3px 14px; }
+.objective-heading label { font-size: 1.06rem; font-weight: 650; }
+.objective-heading span { color: var(--muted); font-size: .82rem; }
+#objectiveHint { margin: 5px 0 9px; color: var(--muted); font-size: .94rem; line-height: 1.45; }
+#objective { width: 100%; min-width: 0; min-height: 96px; padding: 11px 12px; border: 1px solid #8a8a80; border-radius: 0; background: var(--paper); color: var(--ink); font: inherit; font-size: 1rem; line-height: 1.45; resize: vertical; }
+#objective::placeholder { color: var(--muted); opacity: 1; }
+#objective:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+#paymentObjectiveRow { align-items: start; }
+#paymentObjectiveRow[hidden], .objective-section[hidden] { display: none; }
+#paymentObjective { white-space: pre-wrap; overflow-wrap: anywhere; }
+
 .contact-field { display: grid; gap: 5px; font-size: .94rem; font-weight: 620; }
 .contact-field input { width: 100%; min-height: 48px; padding: 9px 12px; border: 1px solid #8a8a80; border-radius: 0; background: var(--paper); color: var(--ink); font-weight: 400; font-size: 1rem; }
 .contact-field input::placeholder { color: #64645a; }
@@ -431,6 +444,11 @@ details[open] > summary .dg-chevron { transform: rotate(225deg); margin-top: 2px
         <ul id="list" aria-label="Выбранные документы" hidden></ul>
         <div class="capacity"><label for="capacityMeter" id="capacityText">Общий размер</label><progress id="capacityMeter" value="0" max="52428800"></progress></div>
         <p id="packageHint" class="package-hint"></p>
+        <section class="objective-section" id="objectiveSection" aria-labelledby="objectiveLabel" hidden>
+          <div class="objective-heading"><label id="objectiveLabel" for="objective">Что нужно проверить?</label><span>По желанию</span></div>
+          <p id="objectiveHint">Опишите, какое решение вы хотите принять или какой вопрос нужно прояснить.</p>
+          <textarea id="objective" rows="3" maxlength="2000" aria-describedby="objectiveHint" placeholder="Например, можно ли купить помещение и использовать его под офис?"></textarea>
+        </section>
         <p id="submitError" class="error" role="alert" tabindex="-1"></p>
         <a id="submitBureauLink" class="inline-link" href="https://kaloy.ru/" target="_blank" rel="noopener" hidden>Открыть сайт бюро в новой вкладке</a>
         <button class="primary send" id="submit" disabled hidden><span id="submitLabel">Заказать отчёт</span></button>
@@ -446,6 +464,7 @@ details[open] > summary .dg-chevron { transform: rotate(225deg); margin-top: 2px
         <p class="intro">Проверьте состав заказа перед оплатой.</p>
         <dl class="payment-summary">
           <div><dt>Проверка недвижимости</dt><dd id="paymentFiles"></dd></div>
+          <div id="paymentObjectiveRow" hidden><dt>Цель проверки</dt><dd id="paymentObjective"></dd></div>
           <div class="order-total"><dt>Учебная стоимость</dt><dd>990 ₽</dd></div>
         </dl>
         <div class="checkout-note"><strong>Тестовый платёж</strong><p>Деньги не списываются. Реквизиты карты не нужны.</p></div>
@@ -963,6 +982,7 @@ details[open] > summary .dg-chevron { transform: rotate(225deg); margin-top: 2px
     $('uploadView').classList.toggle('has-files',hasFiles);
     $('chooseText').textContent=hasFiles?'Добавить ещё файлы':'Выбрать документы';
     $('batch').hidden=$('list').hidden=!hasFiles;
+    $('objectiveSection').hidden=!hasFiles||live;
     $('batchLabel').textContent=live?'К отправке':'Выбрано для демо';
     $('summary').textContent=hasFiles?fileCount(items.length)+' · '+format(totalBytes):'';
     $('list').setAttribute('aria-label','Выбранные документы: '+fileCount(items.length));
@@ -1169,6 +1189,9 @@ details[open] > summary .dg-chevron { transform: rotate(225deg); margin-top: 2px
     presentedStage=null;
     demoStartedAt = 0;
     $('contactForm').reset();
+    $('objective').value='';
+    $('paymentObjective').textContent='';
+    $('paymentObjectiveRow').hidden=true;
     $('contactError').textContent = '';
     $('phone').setCustomValidity('');
     $('paymentError').textContent = '';
@@ -1221,6 +1244,9 @@ details[open] > summary .dg-chevron { transform: rotate(225deg); margin-top: 2px
       return;
     }
     $('paymentFiles').textContent = $('summary').textContent;
+    const objective=$('objective').value.trim();
+    $('paymentObjective').textContent=objective;
+    $('paymentObjectiveRow').hidden=!objective;
     $('paymentError').textContent = '';
     $('pay').textContent = 'Подтвердить тестовую оплату';
     $('declinePayment').closest('details').open = false;
